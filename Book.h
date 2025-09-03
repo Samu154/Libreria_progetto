@@ -19,7 +19,6 @@ public:
     void fromJson(const QJsonObject& json) override;
 
     QWidget* createDetailWidget(QWidget* parent = nullptr) const override;
-ebay
     Media* clone() const override;
 
     void performAction() const override; // Es: "Apri il libro"
