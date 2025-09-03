@@ -4,11 +4,9 @@ CONFIG += c++17
 QT += core gui widgets
 
 SOURCES += \
+    main.cpp \
     Book.cpp
 
 HEADERS += \
     Media.h \
     Book.h
-
-# FORMS += MainWindow.ui MediaDialog.ui    # se hai file .ui
-# RESOURCES += resources.qrc               # se hai .qrc
