@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MediaDialog</class>
+ <widget class="QDialog" name="MediaDialog">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>400</width><height>300</height></rect>
+  </property>
+  <property name="windowTitle"><string>Media</string></property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QComboBox" name="typeComboBox"/>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <!-- Book page -->
+     <widget class="QWidget" name="bookPage">
+      <layout class="QFormLayout" name="formLayout_book">
+       <item row="0" column="0"><widget class="QLabel" name="label_bookTitle"><property name="text"><string>Titolo:</string></property></widget></item>
+       <item row="0" column="1"><widget class="QLineEdit" name="bookTitleLineEdit"/></item>
+       <item row="1" column="0"><widget class="QLabel" name="label_bookAuthor"><property name="text"><string>Autore:</string></property></widget></item>
+       <item row="1" column="1"><widget class="QLineEdit" name="bookAuthorLineEdit"/></item>
+       <item row="2" column="0"><widget class="QLabel" name="label_bookYear"><property name="text"><string>Anno:</string></property></widget></item>
+       <item row="2" column="1"><widget class="QLineEdit" name="bookYearLineEdit"/></item>
+      </layout>
+     </widget>
+
+     <!-- Film page -->
+     <widget class="QWidget" name="filmPage">
+      <layout class="QFormLayout" name="formLayout_film">
+       <item row="0" column="0"><widget class="QLabel" name="label_filmTitle"><property name="text"><string>Titolo:</string></property></widget></item>
+       <item row="0" column="1"><widget class="QLineEdit" name="filmTitleLineEdit"/></item>
+       <item row="1" column="0"><widget class="QLabel" name="label_filmDirector"><property name="text"><string>Regista:</string></property></widget></item>
+       <item row="1" column="1"><widget class="QLineEdit" name="filmDirectorLineEdit"/></item>
+       <item row="2" column="0"><widget class="QLabel" name="label_filmDuration"><property name="text"><string>Durata (min):</string></property></widget></item>
+       <item row="2" column="1"><widget class="QLineEdit" name="filmDurationLineEdit"/></item>
+      </layout>
+     </widget>
+
+     <!-- Article page -->
+     <widget class="QWidget" name="articlePage">
+      <layout class="QFormLayout" name="formLayout_article">
+       <item row="0" column="0"><widget class="QLabel" name="label_articleTitle"><property name="text"><string>Titolo:</string></property></widget></item>
+       <item row="0" column="1"><widget class="QLineEdit" name="articleTitleLineEdit"/></item>
+       <item row="1" column="0"><widget class="QLabel" name="label_articleJournal"><property name="text"><string>Rivista:</string></property></widget></item>
+       <item row="1" column="1"><widget class="QLineEdit" name="articleJournalLineEdit"/></item>
+       <item row="2" column="0"><widget class="QLabel" name="label_articlePages"><property name="text"><string>Pagine:</string></property></widget></item>
+       <item row="2" column="1"><widget class="QLineEdit" name="articlePagesLineEdit"/></item>
+      </layout>
+     </widget>
+
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation"><enum>Qt::Horizontal</enum></property>
+     <property name="standardButtons"><set> <enum>QDialogButtonBox::Ok</enum> <enum>QDialogButtonBox::Cancel</enum> </set></property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
