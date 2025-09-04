@@ -1,6 +1,8 @@
 #include "MediaDetailWidgetBuilder.h"
 #include "Media.h"
 #include "Book.h"
+#include "Film.h"
+#include "Article.h"
 #include <QFormLayout>
 #include <QLabel>
 

@@ -2,6 +2,8 @@
 #include <QDebug>
 #include <QJsonDocument>
 #include "Book.h"
+#include "Film.h"
+#include "Article.h"
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
