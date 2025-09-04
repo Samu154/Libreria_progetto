@@ -11,6 +11,7 @@ SOURCES += \
     Article.cpp \
     MediaManager.cpp \
     MediaListModel.cpp \
+    MediaFactory.cpp \
 
 HEADERS += \
     Media.h \
@@ -21,3 +22,4 @@ HEADERS += \
     Article.h \
     MediaManager.h \
     MediaListModel.h \
+    MediaFactory.h \
