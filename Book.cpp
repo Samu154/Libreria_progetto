@@ -1,58 +1,54 @@
 #include "Book.h"
-#include <QFormLayout>
-#include <QLabel>
 #include <QDebug>
 
+
 Book::Book(const QString& title, const QString& author, int year) {
-    this->title = title;
-    this->author = author;
-    this->year = year;
+this->title = title;
+this->author = author;
+this->year = year;
 }
 
-QString Book::getTitle() const {
-    return title;
-}
+
+QString Book::getTitle() const { return title; }
+
 
 QString Book::getSummary() const {
-    return QString("%1 (di %2, %3)").arg(title, author).arg(year);
+return QString("%1 (di %2, %3)").arg(title, author).arg(year);
 }
+
 
 QJsonObject Book::toJson() const {
-    QJsonObject json;
-    json["type"] = "Book";
-    json["title"] = title;
-    json["author"] = author;
-    json["year"] = year;
-    return json;
+QJsonObject json;
+json["type"] = "Book"; // utile per factory esterna durante il load
+json["title"] = title;
+json["author"] = author;
+json["year"] = year;
+return json;
 }
+
 
 void Book::fromJson(const QJsonObject& json) {
-    title = json["title"].toString();
-    author = json["author"].toString();
-    year = json["year"].toInt();
+// Robustezza minima (vincolo 7)
+if (json.contains("title") && json["title"].isString())
+title = json["title"].toString();
+if (json.contains("author") && json["author"].isString())
+author = json["author"].toString();
+if (json.contains("year") && json["year"].isDouble())
+year = json["year"].toInt();
 }
 
-QWidget* Book::createDetailWidget(QWidget* parent) const {
-    QWidget* widget = new QWidget(parent);
-    QFormLayout* layout = new QFormLayout(widget);
-    layout->addRow("Titolo:", new QLabel(title));
-    layout->addRow("Autore:", new QLabel(author));
-    layout->addRow("Anno:", new QLabel(QString::number(year)));
-    return widget;
-}
 
-Media* Book::clone() const {
-    return new Book(*this);
-}
+Media* Book::clone() const { return new Book(*this); }
+
 
 void Book::performAction() const {
-    qDebug() << "Sto aprendo il libro:" << title;
+// Azione di dominio "neutra" rispetto alla GUI (es. logging)
+qDebug() << "[Book::performAction] Apri libro:" << title;
 }
 
-QString Book::getAuthor() const {
-    return author;
-}
 
-int Book::getYear() const {
-    return year;
-}
+void Book::accept(MediaVisitor& visitor) const { visitor.visit(*this); }
+
+
+QString Book::getAuthor() const { return author; }
+int Book::getYear() const { return year; }

@@ -1,38 +1,42 @@
 #ifndef MEDIA_H
 #define MEDIA_H
 
+
 #include <QString>
 #include <QJsonObject>
-#include <QWidget>
 
-// Classe astratta che rappresenta un generico media
+
+class MediaVisitor; // forward declaration (no GUI)
+
+
+// Interfaccia astratta del dominio: nessuna dipendenza da QWidget/GUI
 class Media {
 public:
-    virtual ~Media() = default;
+virtual ~Media() = default;
 
-    // Restituisce il titolo del media
-    virtual QString getTitle() const = 0;
 
-    // Restituisce una breve descrizione da visualizzare nella lista
-    virtual QString getSummary() const = 0;
+// Dati/contratto di dominio
+virtual QString getTitle() const = 0;
+virtual QString getSummary() const = 0;
 
-    // Serializza l'oggetto in formato JSON
-    virtual QJsonObject toJson() const = 0;
 
-    // Carica l'oggetto da una rappresentazione JSON
-    virtual void fromJson(const QJsonObject& json) = 0;
+// Persistenza strutturata (consentita dal vincolo 6)
+virtual QJsonObject toJson() const = 0;
+virtual void fromJson(const QJsonObject& json) = 0;
 
-    // Crea un widget dettagliato per la visualizzazione o modifica del media
-    virtual QWidget* createDetailWidget(QWidget* parent = nullptr) const = 0;
 
-    // Clonazione polimorfica (necessaria per copiare i media in modo corretto)
-    virtual Media* clone() const = 0;
+// Polimorfismo utile (no GUI): clonazione e azione specifica
+virtual Media* clone() const = 0;
+virtual void performAction() const = 0;
 
-    // Operazione specifica del media (es. "apri", "riproduci")
-    virtual void performAction() const = 0;
+
+// Visitor per estendere comportamenti dall'esterno (es. GUI builders)
+virtual void accept(MediaVisitor& visitor) const = 0;
+
 
 protected:
-    QString title;
+QString title;
 };
+
 
 #endif // MEDIA_H

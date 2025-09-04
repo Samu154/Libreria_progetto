@@ -10,3 +10,4 @@ SOURCES += \
 HEADERS += \
     Media.h \
     Book.h
+    MediaVisitor.h
