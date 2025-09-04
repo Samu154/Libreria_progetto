@@ -12,6 +12,7 @@ SOURCES += \
     MediaManager.cpp \
     MediaListModel.cpp \
     MediaFactory.cpp \
+    MediaDialog.cpp \
 
 HEADERS += \
     Media.h \
@@ -23,3 +24,7 @@ HEADERS += \
     MediaManager.h \
     MediaListModel.h \
     MediaFactory.h \
+    MediaDialog.h \
+
+FORMS += \
+    MediaDialog.ui \
