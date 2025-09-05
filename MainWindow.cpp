@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "MediaDialog.h"
 #include "MediaDetailWidgetBuilder.h"
+#include "Media.h"
 
 #include <QListView>
 #include <QLineEdit>
