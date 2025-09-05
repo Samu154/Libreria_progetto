@@ -25,6 +25,3 @@ HEADERS += \
     MediaListModel.h \
     MediaFactory.h \
     MediaDialog.h \
-
-FORMS += \
-    MediaDialog.ui \
