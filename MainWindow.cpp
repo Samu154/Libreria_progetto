@@ -61,6 +61,17 @@ void MainWindow::setupUi() {
     setCentralWidget(central);
     QVBoxLayout* mainLayout = new QVBoxLayout(central);
 
+    QString sample = QCoreApplication::applicationDirPath() + "/sample_library.json";
+    if (QFile::exists(sample)) {
+        QString err;
+        if (!m_manager.loadFromFile(sample, &err)) {
+            qWarning() << "Errore caricamento sample:" << err;
+        } else {
+            m_currentFilePath.clear(); // non segna come salvato
+            m_dirty = false;
+        }
+    }
+
     // Top row: search + filters
     QHBoxLayout* topRow = new QHBoxLayout();
     QLabel* lblSearch = new QLabel(tr("Cerca:"), this);

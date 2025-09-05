@@ -1,0 +1,13 @@
+{
+  "format": "library_v1",
+  "generatedAt": "2025-09-05T12:00:00Z",
+  "count": 6,
+  "items": [
+    { "type":"Book", "title":"Il nome della rosa", "author":"Umberto Eco", "year":1980 },
+    { "type":"Book", "title":"1984", "author":"George Orwell", "year":1949 },
+    { "type":"Film", "title":"La vita è bella", "director":"Roberto Benigni", "duration":116 },
+    { "type":"Film", "title":"Il Padrino", "director":"Francis Ford Coppola", "duration":175 },
+    { "type":"Article", "title":"Quantum Computing Today", "journal":"Nature", "pages":12 },
+    { "type":"Article", "title":"Deep Learning Review", "journal":"IEEE", "pages":24 }
+  ]
+}
