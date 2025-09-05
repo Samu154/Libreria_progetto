@@ -14,11 +14,10 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSplitter>
-#include <QFileDialog>
-#include <QMessageBox>
-#include <QSortFilterProxyModel>
-#include <QItemSelectionModel>
-#include <QDebug>
+#include <QScrollArea>
+#include <QPushButton>
+#include <QButtonGroup>
+#include <QRegExp>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -34,88 +33,183 @@ MainWindow::MainWindow(QWidget* parent)
 MainWindow::~MainWindow() = default;
 
 void MainWindow::setupUi() {
-    // Actions
-    m_actionOpen = new QAction(tr("Apri..."), this);
-    m_actionSave = new QAction(tr("Salva..."), this);
-    m_actionExit = new QAction(tr("Esci"), this);
-    m_actionAdd = new QAction(tr("Aggiungi"), this);
-    m_actionEdit = new QAction(tr("Modifica"), this);
-    m_actionDelete = new QAction(tr("Elimina"), this);
+// Actions
+m_actionOpen = new QAction(tr("Apri..."), this);
+m_actionSave = new QAction(tr("Salva"), this);
+m_actionExit = new QAction(tr("Esci"), this);
+m_actionAdd = new QAction(tr("Aggiungi"), this);
+m_actionEdit = new QAction(tr("Modifica"), this);
+m_actionDelete = new QAction(tr("Elimina"), this);
 
-    // Menu
-    QMenu* menuFile = menuBar()->addMenu(tr("&File"));
-    menuFile->addAction(m_actionOpen);
-    menuFile->addAction(m_actionSave);
-    menuFile->addSeparator();
-    menuFile->addAction(m_actionExit);
 
-    // Toolbar
-    QToolBar* toolbar = addToolBar(tr("Main"));
-    toolbar->addAction(m_actionAdd);
-    toolbar->addAction(m_actionEdit);
-    toolbar->addAction(m_actionDelete);
+// Menu
+QMenu* menuFile = menuBar()->addMenu(tr("&File"));
+menuFile->addAction(m_actionOpen);
+menuFile->addAction(m_actionSave);
+menuFile->addSeparator();
+menuFile->addAction(m_actionExit);
 
-    // central widget layout
-    QWidget* central = new QWidget(this);
-    setCentralWidget(central);
 
-    QVBoxLayout* mainLayout = new QVBoxLayout(central);
+// Toolbar (opzionale)
+QToolBar* toolbar = addToolBar(tr("Main"));
+toolbar->addAction(m_actionAdd);
+toolbar->addAction(m_actionEdit);
+toolbar->addAction(m_actionDelete);
 
-    // search row
-    QHBoxLayout* searchLayout = new QHBoxLayout();
-    QLabel* lbl = new QLabel(tr("Cerca:"), this);
-    m_searchLineEdit = new QLineEdit(this);
-    searchLayout->addWidget(lbl);
-    searchLayout->addWidget(m_searchLineEdit);
-    mainLayout->addLayout(searchLayout);
 
-    // splitter with list and details
-    QSplitter* splitter = new QSplitter(Qt::Horizontal, this);
+// Central widget and main layout
+QWidget* central = new QWidget(this);
+setCentralWidget(central);
+QVBoxLayout* mainLayout = new QVBoxLayout(central);
 
-    QWidget* leftPane = new QWidget(this);
-    QVBoxLayout* leftLayout = new QVBoxLayout(leftPane);
-    m_listView = new QListView(this);
-    leftLayout->addWidget(m_listView);
-    splitter->addWidget(leftPane);
 
-    QWidget* rightPane = new QWidget(this);
-    QVBoxLayout* rightLayout = new QVBoxLayout(rightPane);
-    m_stackedWidget = new QStackedWidget(this);
+// Top row: search + filters
+QHBoxLayout* topRow = new QHBoxLayout();
+QLabel* lblSearch = new QLabel(tr("Cerca:"), this);
+m_searchLineEdit = new QLineEdit(this);
+m_searchLineEdit->setPlaceholderText(tr("Cerca per titolo, autore, regista..."));
 
-    // placeholder page with layout where we'll insert detail widget
-    QWidget* placeholderPage = new QWidget(this);
-    QVBoxLayout* detailLayout = new QVBoxLayout(placeholderPage);
-    m_detailPlaceholder = new QWidget(this);
-    detailLayout->addWidget(m_detailPlaceholder);
-    // keep pointer to layout via object name for later access
-    placeholderPage->setLayout(detailLayout);
 
-    m_stackedWidget->addWidget(placeholderPage);
-    rightLayout->addWidget(m_stackedWidget);
-    splitter->addWidget(rightPane);
+// Filter buttons
+QWidget* filterWidget = new QWidget(this);
+QHBoxLayout* filterLayout = new QHBoxLayout(filterWidget);
+filterLayout->setContentsMargins(0,0,0,0);
+QPushButton* btnAll = new QPushButton(tr("All"), this);
+QPushButton* btnBooks = new QPushButton(tr("Book"), this);
+QPushButton* btnFilms = new QPushButton(tr("Film"), this);
+QPushButton* btnArticles = new QPushButton(tr("Article"), this); // sostituisce Serie TV
+btnAll->setCheckable(true); btnBooks->setCheckable(true); btnFilms->setCheckable(true); btnArticles->setCheckable(true);
+btnAll->setChecked(true);
 
-    mainLayout->addWidget(splitter);
+// Group so only one selected at a time
+filterGroup->addButton(btnFilms);
+filterGroup->addButton(btnArticles);
 
-    statusBar();
 
-    // model setup
-    m_model = new MediaListModel(&m_manager, this);
-    m_proxy = new QSortFilterProxyModel(this);
-    m_proxy->setSourceModel(m_model);
-    m_proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    m_proxy->setFilterRole(MediaListModel::TitleRole);
-    m_listView->setModel(m_proxy);
-}
+filterLayout->addWidget(btnAll);
+filterLayout->addWidget(btnBooks);
+filterLayout->addWidget(btnFilms);
+filterLayout->addWidget(btnArticles);
 
-void MainWindow::setupConnections() {
-    connect(m_actionOpen, &QAction::triggered, this, &MainWindow::onActionOpen);
-    connect(m_actionSave, &QAction::triggered, this, &MainWindow::onActionSave);
-    connect(m_actionExit, &QAction::triggered, this, &MainWindow::onActionExit);
-    connect(m_actionAdd, &QAction::triggered, this, &MainWindow::onActionAdd);
-    connect(m_actionEdit, &QAction::triggered, this, &MainWindow::onActionEdit);
-    connect(m_actionDelete, &QAction::triggered, this, &MainWindow::onActionDelete);
-    connect(m_searchLineEdit, &QLineEdit::textChanged, this, &MainWindow::onSearchTextChanged);
-    connect(m_listView->selectionModel(), &QItemSelectionModel::currentChanged,this, &MainWindow::onSelectionChanged);
+
+topRow->addWidget(lblSearch);
+topRow->addWidget(m_searchLineEdit, 1);
+topRow->addWidget(filterWidget, 0);
+mainLayout->addLayout(topRow);
+
+
+// Main splitter: left list (40%) - right detail (60%)
+QSplitter* splitter = new QSplitter(Qt::Horizontal, this);
+
+
+// Left pane - larger list
+QWidget* leftPane = new QWidget(this);
+QVBoxLayout* leftLayout = new QVBoxLayout(leftPane);
+m_listView = new QListView(this);
+m_listView->setSelectionMode(QAbstractItemView::SingleSelection);
+m_listView->setUniformItemSizes(true);
+leftLayout->addWidget(m_listView);
+splitter->addWidget(leftPane);
+
+
+// Right pane - larger detail area
+QWidget* rightPane = new QWidget(this);
+QVBoxLayout* rightLayout = new QVBoxLayout(rightPane);
+
+
+// Big detail title area
+QLabel* detailTitle = new QLabel(tr("Seleziona un elemento"), this);
+detailTitle->setObjectName("detailTitle");
+QFont titleFont = detailTitle->font();
+titleFont.setPointSize(titleFont.pointSize() + 4);
+titleFont.setBold(true);
+detailTitle->setFont(titleFont);
+
+
+// Detail content area (scrollable)
+QScrollArea* scroll = new QScrollArea(this);
+scroll->setWidgetResizable(true);
+QWidget* detailContainer = new QWidget(this);
+QVBoxLayout* detailLayout = new QVBoxLayout(detailContainer);
+// placeholder widgets (will be replaced by MediaDetailWidgetBuilder)
+QLabel* placeholder = new QLabel(tr("Dettagli appariranno qui"), this);
+placeholder->setWordWrap(true);
+detailLayout->addWidget(placeholder);
+detailLayout->addStretch(1);
+scroll->setWidget(detailContainer);
+
+rightLayout->addWidget(detailTitle);
+rightLayout->addWidget(scroll, 1);
+splitter->addWidget(rightPane);
+
+
+// set stretch factors: left 40%, right 60%
+splitter->setStretchFactor(0, 4);
+splitter->setStretchFactor(1, 6);
+
+
+mainLayout->addWidget(splitter, 1);
+
+
+// Bottom actions
+QHBoxLayout* bottomRow = new QHBoxLayout();
+bottomRow->addStretch(1);
+QPushButton* addBtn = new QPushButton(tr("Aggiungi"), this);
+QPushButton* editBtn = new QPushButton(tr("Modifica"), this);
+QPushButton* delBtn = new QPushButton(tr("Elimina"), this);
+QPushButton* saveBtn = new QPushButton(tr("Salva"), this);
+addBtn->setToolTip(tr("Aggiungi un nuovo media"));
+editBtn->setToolTip(tr("Modifica l'elemento selezionato"));
+delBtn->setToolTip(tr("Elimina l'elemento selezionato"));
+saveBtn->setToolTip(tr("Salva la libreria"));
+
+
+bottomRow->addWidget(addBtn);
+bottomRow->addWidget(editBtn);
+bottomRow->addWidget(delBtn);
+bottomRow->addWidget(saveBtn);
+mainLayout->addLayout(bottomRow);
+
+
+// Model setup (unchanged)
+m_model = new MediaListModel(&m_manager, this);
+m_proxy = new QSortFilterProxyModel(this);
+m_proxy->setSourceModel(m_model);
+m_proxy->setFilterCaseSensitivity(Qt::CaseInsensitive);
+m_proxy->setFilterRole(MediaListModel::TitleRole);
+m_listView->setModel(m_proxy);
+
+
+// Connections (search + filter + buttons)
+connect(m_searchLineEdit, &QLineEdit::textChanged, this, &MainWindow::onSearchTextChanged);
+connect(filterGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked),
+this, [this, btnAll, btnBooks, btnFilms, btnArticles](QAbstractButton* b){
+if (b == btnAll) m_proxy->setFilterFixedString("");
+else if (b == btnBooks) m_proxy->setFilterRegExp(QRegExp("^.*\\bBook\\b.*", Qt::CaseInsensitive));
+else if (b == btnFilms) m_proxy->setFilterRegExp(QRegExp("^.*\\bFilm\\b.*", Qt::CaseInsensitive));
+else if (b == btnArticles) m_proxy->setFilterRegExp(QRegExp("^.*\\bArticle\\b.*", Qt::CaseInsensitive));
+});
+
+connect(addBtn, &QPushButton::clicked, this, &MainWindow::onActionAdd);
+connect(editBtn, &QPushButton::clicked, this, &MainWindow::onActionEdit);
+connect(delBtn, &QPushButton::clicked, this, &MainWindow::onActionDelete);
+connect(saveBtn, &QPushButton::clicked, this, &MainWindow::onActionSave);
+
+
+// selection change -> enable/disable buttons
+connect(m_listView->selectionModel(), &QItemSelectionModel::currentChanged,
+this, &MainWindow::onSelectionChanged);
+m_actionEdit->setEnabled(false);
+m_actionDelete->setEnabled(false);
+
+
+// update detail when selection changes
+connect(m_listView->selectionModel(), &QItemSelectionModel::currentChanged,
+this, &MainWindow::onListSelectionChanged);
+
+
+// Save pointer to some widgets we may want to update later
+// (find detailTitle by objectName or keep a member pointer)
 }
 
 void MainWindow::onActionOpen() {
