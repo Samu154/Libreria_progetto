@@ -23,6 +23,7 @@
 #include <QButtonGroup>
 #include <QRegularExpression>
 #include <QDebug>
+#include <QCoreApplication>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
