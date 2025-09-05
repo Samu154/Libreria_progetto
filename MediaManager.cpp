@@ -79,27 +79,75 @@ return true;
 }
 
 
-bool MediaManager::loadFromFile(const QString& path, QString* error) {
-QFile f(path);
-if (!f.open(QIODevice::ReadOnly)) {
-if (error) *error = QString("Impossibile aprire il file in lettura: %1").arg(path);
-return false;
-}
-const QByteArray data = f.readAll();
-f.close();
-QJsonParseError jerr;
-QJsonDocument doc = QJsonDocument::fromJson(data, &jerr);
-if (jerr.error != QJsonParseError::NoError) {
-if (error) *error = QString("Errore parsing JSON: %1").arg(jerr.errorString());
-return false;
-}
-if (!doc.isArray()) {
-if (error) *error = QString("Formato file non valido: aspettato array JSON");
-return false;
+bool MediaManager::loadFromFile(const QString& path, QString* err) {
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) {
+        if (err) *err = tr("Impossibile aprire il file: %1").arg(path);
+        return false;
+    }
+
+    const QByteArray all = f.readAll();
+    f.close();
+
+    QJsonParseError perr;
+    QJsonDocument doc = QJsonDocument::fromJson(all, &perr);
+    if (perr.error != QJsonParseError::NoError) {
+        if (err) *err = tr("Errore parsing JSON: %1").arg(perr.errorString());
+        return false;
+    }
+
+    QJsonArray arr;
+
+    if (doc.isArray()) {
+        // formato semplice: root è direttamente un array di items
+        arr = doc.array();
+    } else if (doc.isObject()) {
+        QJsonObject root = doc.object();
+        // se c'è "items" e è un array usalo
+        if (root.contains("items") && root.value("items").isArray()) {
+            arr = root.value("items").toArray();
+        } else if (root.contains("items")) {
+            if (err) *err = tr("'items' presente ma non è un array nel file: %1").arg(path);
+            return false;
+        } else {
+            // fallback: se l'oggetto ha campi che somigliano a media (uno solo), potremmo decidere come gestire.
+            if (err) *err = tr("Formato JSON non valido: atteso un array o un oggetto con campo 'items'.");
+            return false;
+        }
+    } else {
+        if (err) *err = tr("Formato JSON non valido (né array né object).");
+        return false;
+    }
+
+    // parse items in arr -> creazione media
+    QVector<QSharedPointer<Media>> tmp;
+    tmp.reserve(arr.size());
+    for (int i = 0; i < arr.size(); ++i) {
+        QJsonValue v = arr.at(i);
+        if (!v.isObject()) {
+            qWarning() << "Elemento non è oggetto JSON in posizione" << i << "- salto";
+            continue;
+        }
+        QJsonObject jo = v.toObject();
+        // MediaFactory::createFromJson deve restituire QSharedPointer<Media> o nullptr
+        QSharedPointer<Media> m = MediaFactory::createFromJson(jo);
+        if (!m) {
+            qWarning() << "Elemento JSON non convertibile in Media in posizione" << i << ":" << jo;
+            continue;
+        }
+        tmp.append(m);
+    }
+
+    // Se vogliamo sostituire il contenuto solo se abbiamo almeno 1 elemento (opzionale)
+    // oppure accettiamo anche file vuoti: qui sostituiamo comunque
+    clear(); // implementa clear() per svuotare m_items e notificare il model
+    for (auto &mm : tmp) add(mm);
+
+    return true;
 }
 
 
-QJsonArray array = doc.array();
+/*QJsonArray array = doc.array();
 
 
 // ricostruisci i media in memoria
