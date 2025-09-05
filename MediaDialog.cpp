@@ -85,6 +85,10 @@ void MediaDialog::buildUi() {
     onTypeChanged(m_typeCombo->currentIndex());
 }
 
+QSharedPointer<Media> MediaDialog::getResult() const {
+    return m_result;
+}
+
 void MediaDialog::onTypeChanged(int index) {
     if (!m_stack) return;
     m_stack->setCurrentIndex(index);
