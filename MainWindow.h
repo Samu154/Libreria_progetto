@@ -34,6 +34,7 @@ void onActionEdit();
 void onActionDelete();
 void onSearchTextChanged(const QString& txt);
 void onListSelectionChanged(const QModelIndex& current, const QModelIndex& previous);
+void onSelectionChanged(const QModelIndex& current, const QModelIndex& previous);
 
 
 private:

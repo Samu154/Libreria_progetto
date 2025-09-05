@@ -115,6 +115,7 @@ void MainWindow::setupConnections() {
     connect(m_actionEdit, &QAction::triggered, this, &MainWindow::onActionEdit);
     connect(m_actionDelete, &QAction::triggered, this, &MainWindow::onActionDelete);
     connect(m_searchLineEdit, &QLineEdit::textChanged, this, &MainWindow::onSearchTextChanged);
+    connect(m_listView->selectionModel(), &QItemSelectionModel::currentChanged,this, &MainWindow::onSelectionChanged);
 }
 
 void MainWindow::onActionOpen() {
@@ -176,16 +177,47 @@ void MainWindow::onActionEdit() {
 }
 
 void MainWindow::onActionDelete() {
+    // Ottieni l'indice nella view (proxy)
     QModelIndex idxProxy = m_listView->currentIndex();
-    if (!idxProxy.isValid()) return;
-    QModelIndex idx = m_proxy->mapToSource(idxProxy);
-    int row = idx.row();
-    if (QMessageBox::question(this, tr("Conferma"), tr("Eliminare l'elemento selezionato?"), QMessageBox::Yes|QMessageBox::No) != QMessageBox::Yes)
-        return;
-    if (!m_manager.remove(row)) {
-        QMessageBox::warning(this, tr("Errore"), tr("Impossibile eliminare l'elemento"));
+    if (!idxProxy.isValid()) {
+        // niente selezione -> non fare nulla, oppure mostra un avviso lieve
+        QMessageBox::information(this, tr("Nessuna selezione"), tr("Nessun elemento selezionato da eliminare."));
         return;
     }
+
+    // Mappa al modello sorgente (controlla che il model sia un proxy)
+    QSortFilterProxyModel* proxy = qobject_cast<QSortFilterProxyModel*>(m_listView->model());
+    if (!proxy) {
+        qWarning() << "onActionDelete: listView model is not a QSortFilterProxyModel";
+        return;
+    }
+
+    QModelIndex srcIdx = proxy->mapToSource(idxProxy);
+    if (!srcIdx.isValid()) {
+        qWarning() << "onActionDelete: mapped source index invalid";
+        QMessageBox::warning(this, tr("Errore"), tr("Impossibile determinare l'elemento da eliminare."));
+        return;
+    }
+
+    int row = srcIdx.row();
+    if (row < 0 || row >= m_manager.count()) {
+        qWarning() << "onActionDelete: row out of range" << row << "count =" << m_manager.count();
+        QMessageBox::warning(this, tr("Errore"), tr("Indice non valido."));
+        return;
+    }
+
+    // Conferma utente
+    if (QMessageBox::question(this, tr("Conferma"), tr("Eliminare l'elemento selezionato?"),
+                              QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
+        return;
+    }
+
+    // Rimuovi tramite MediaManager: verifica valore di ritorno
+    if (!m_manager.remove(row)) {
+        QMessageBox::warning(this, tr("Errore"), tr("Impossibile eliminare l'elemento."));
+        return;
+    }
+
     m_dirty = true;
 }
 
@@ -199,6 +231,20 @@ void MainWindow::onListSelectionChanged(const QModelIndex& current, const QModel
     QModelIndex src = m_proxy->mapToSource(current);
     int row = src.row();
     showDetailForIndex(row);
+}
+
+void MainWindow::onSelectionChanged(const QModelIndex& current, const QModelIndex& /*previous*/) {
+    bool hasSelection = false;
+    if (current.isValid()) {
+        // m_listView usa proxy -> mappa a source per sicurezza
+        QSortFilterProxyModel* proxy = qobject_cast<QSortFilterProxyModel*>(m_listView->model());
+        if (proxy) {
+            QModelIndex src = proxy->mapToSource(current);
+            hasSelection = src.isValid();
+        }
+    }
+    m_actionEdit->setEnabled(hasSelection);
+    m_actionDelete->setEnabled(hasSelection);
 }
 
 void MainWindow::showDetailForIndex(int idx) {
