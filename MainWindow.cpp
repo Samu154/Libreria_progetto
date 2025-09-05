@@ -17,7 +17,7 @@
 #include <QScrollArea>
 #include <QPushButton>
 #include <QButtonGroup>
-#include <QRegExp>
+#include <QRegularExpression>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -185,9 +185,9 @@ connect(m_searchLineEdit, &QLineEdit::textChanged, this, &MainWindow::onSearchTe
 connect(filterGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked),
 this, [this, btnAll, btnBooks, btnFilms, btnArticles](QAbstractButton* b){
 if (b == btnAll) m_proxy->setFilterFixedString("");
-else if (b == btnBooks) m_proxy->setFilterRegExp(QRegExp("^.*\\bBook\\b.*", Qt::CaseInsensitive));
-else if (b == btnFilms) m_proxy->setFilterRegExp(QRegExp("^.*\\bFilm\\b.*", Qt::CaseInsensitive));
-else if (b == btnArticles) m_proxy->setFilterRegExp(QRegExp("^.*\\bArticle\\b.*", Qt::CaseInsensitive));
+else if (b == btnBooks) m_proxy->setFilterRegularExpression(QRegularExpression("^.*\\bBook\\b.*", Qt::CaseInsensitive));
+else if (b == btnFilms) m_proxy->setFilterRegularExpression(QRegularExpression("^.*\\bFilm\\b.*", Qt::CaseInsensitive));
+else if (b == btnArticles) m_proxy->setFilterRegularExpression(QRegularExpression("^.*\\bArticle\\b.*", Qt::CaseInsensitive));
 });
 
 connect(addBtn, &QPushButton::clicked, this, &MainWindow::onActionAdd);
