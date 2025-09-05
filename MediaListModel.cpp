@@ -17,6 +17,10 @@ int MediaListModel::rowCount(const QModelIndex& parent) const {
 }
 
 QVariant MediaListModel::data(const QModelIndex& index, int role) const {
+    if (role == TypeRole) {
+    auto m = m_manager->at(index.row());
+    return m ? m->toJson().value("type").toString() : QString();
+    }
     if (!m_manager) return {};
     if (!index.isValid()) return {};
     int row = index.row();

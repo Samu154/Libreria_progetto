@@ -53,9 +53,8 @@ void MainWindow::setupUi() {
 
     // Toolbar
     QToolBar* toolbar = addToolBar(tr("Main"));
-    toolbar->addAction(m_actionAdd);
-    toolbar->addAction(m_actionEdit);
-    toolbar->addAction(m_actionDelete);
+    toolbar->addAction(m_actionOpen);
+    toolbar->addAction(m_actionSave);
 
     // central widget and main layout
     QWidget* central = new QWidget(this);
@@ -166,17 +165,20 @@ void MainWindow::setupUi() {
     connect(m_searchLineEdit, &QLineEdit::textChanged, this, &MainWindow::onSearchTextChanged);
 
     connect(filterGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked),
-            this, [this, btnAll, btnBooks, btnFilms, btnArticles](QAbstractButton* b){
+    this, [this, btnAll, btnBooks, btnFilms, btnArticles](QAbstractButton* b){
+        // Se "All" selezionato: cerchiamo per testo (titolo)
         if (b == btnAll) {
-            m_proxy->setFilterFixedString("");
-        } else if (b == btnBooks) {
-            m_proxy->setFilterRegularExpression(QRegularExpression("\\bBook\\b", QRegularExpression::CaseInsensitiveOption));
-        } else if (b == btnFilms) {
-            m_proxy->setFilterRegularExpression(QRegularExpression("\\bFilm\\b", QRegularExpression::CaseInsensitiveOption));
-        } else if (b == btnArticles) {
-            m_proxy->setFilterRegularExpression(QRegularExpression("\\bArticle\\b", QRegularExpression::CaseInsensitiveOption));
+            m_proxy->setFilterRole(MediaListModel::TitleRole);
+            m_proxy->setFilterFixedString(m_searchLineEdit->text());
+        } else {
+            // Quando un tipo è selezionato filtriamo per TypeRole
+            m_proxy->setFilterRole(MediaListModel::TypeRole);
+            if (b == btnBooks)      m_proxy->setFilterFixedString("Book");
+            else if (b == btnFilms) m_proxy->setFilterFixedString("Film");
+            else if (b == btnArticles) m_proxy->setFilterFixedString("Article");
         }
     });
+
 
     connect(addBtn, &QPushButton::clicked, this, &MainWindow::onActionAdd);
     connect(editBtn, &QPushButton::clicked, this, &MainWindow::onActionEdit);
@@ -287,15 +289,33 @@ void MainWindow::onActionDelete() {
         return;
     }
     QSortFilterProxyModel* proxy = qobject_cast<QSortFilterProxyModel*>(m_listView->model());
-    if (!proxy) { qWarning() << "onActionDelete: listView model is not a QSortFilterProxyModel"; return; }
+    if (!proxy) { qWarning() << "onActionDelete: model is not a proxy"; return; }
     QModelIndex srcIdx = proxy->mapToSource(idxProxy);
     if (!srcIdx.isValid()) { QMessageBox::warning(this, tr("Errore"), tr("Impossibile determinare l'elemento da eliminare.")); return; }
     int row = srcIdx.row();
     if (row < 0 || row >= m_manager.count()) { QMessageBox::warning(this, tr("Errore"), tr("Indice non valido.")); return; }
-    if (QMessageBox::question(this, tr("Conferma"), tr("Eliminare l'elemento selezionato?"), QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) return;
+
+    if (QMessageBox::question(this, tr("Conferma"), tr("Eliminare l'elemento selezionato?"),
+                              QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) return;
+
     if (!m_manager.remove(row)) { QMessageBox::warning(this, tr("Errore"), tr("Impossibile eliminare l'elemento.")); return; }
+
+    // aggiorna vista: scegli next selection se esiste, altrimenti pulisci dettaglio
+    int newCount = m_manager.count();
+    if (newCount == 0) {
+        m_listView->clearSelection();
+        showDetailForIndex(-1); // pulisce dettaglio
+    } else {
+        int nextRow = qMin(row, newCount - 1);
+        QModelIndex nextIdx = m_model->index(nextRow, 0);
+        QModelIndex proxyIdx = m_proxy->mapFromSource(nextIdx);
+        m_listView->setCurrentIndex(proxyIdx);
+        showDetailForIndex(nextRow);
+    }
+
     m_dirty = true;
 }
+
 
 void MainWindow::onSearchTextChanged(const QString& txt) {
     if (!m_proxy) return;
