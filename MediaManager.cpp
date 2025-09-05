@@ -3,6 +3,7 @@
 #include "Book.h"
 #include "Film.h"
 #include "Article.h"
+#include "MediaFactory.h"
 
 
 #include <QFile>
@@ -192,4 +193,4 @@ return a;
 // Unknown type -> ignore
 qDebug() << "MediaManager: tipo sconosciuto:" << type;
 return {};
-}
+}*/
