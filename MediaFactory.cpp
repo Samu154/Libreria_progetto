@@ -4,7 +4,6 @@
 #include "Film.h"
 #include "Article.h"
 
-
 #include <QDebug>
 
 
@@ -13,7 +12,6 @@ if (!obj.contains("type") || !obj["type"].isString()) {
 qDebug() << "MediaFactory::createFromJson: missing or invalid 'type' field";
 return {};
 }
-
 
 const QString type = obj.value("type").toString();
 if (type == "Book") {
@@ -32,11 +30,9 @@ a->fromJson(obj);
 return a;
 }
 
-
 qDebug() << "MediaFactory::createFromJson: unknown type:" << type;
 return {};
 }
-
 
 QSharedPointer<Media> MediaFactory::createEmptyOfType(const QString& type) {
 if (type == "Book") {
@@ -51,7 +47,6 @@ return QSharedPointer<Media>(new Article());
 qDebug() << "MediaFactory::createEmptyOfType: unsupported type:" << type;
 return {};
 }
-
 
 QStringList MediaFactory::supportedTypes() {
 return {"Book", "Film", "Article"};

@@ -1,5 +1,4 @@
 #include "MainWindow.h"
-
 #include "MediaDialog.h"
 #include "MediaDetailWidgetBuilder.h"
 #include "Media.h"
@@ -35,7 +34,6 @@ MainWindow::MainWindow(QWidget* parent)
 MainWindow::~MainWindow() = default;
 
 void MainWindow::setupUi() {
-    // Actions
     m_actionOpen = new QAction(tr("Apri..."), this);
     m_actionSave = new QAction(tr("Salva"), this);
     m_actionSaveAs = new QAction(tr("Salva come..."), this);
@@ -44,7 +42,6 @@ void MainWindow::setupUi() {
     m_actionEdit = new QAction(tr("Modifica"), this);
     m_actionDelete = new QAction(tr("Elimina"), this);
 
-    // Menu
     QMenu* menuFile = menuBar()->addMenu(tr("&File"));
     menuFile->addAction(m_actionOpen);
     menuFile->addAction(m_actionSave);
@@ -52,12 +49,10 @@ void MainWindow::setupUi() {
     menuFile->addSeparator();
     menuFile->addAction(m_actionExit);
 
-    // Toolbar
     QToolBar* toolbar = addToolBar(tr("Main"));
     toolbar->addAction(m_actionOpen);
     toolbar->addAction(m_actionSave);
 
-    // central widget and main layout
     QWidget* central = new QWidget(this);
     setCentralWidget(central);
     QVBoxLayout* mainLayout = new QVBoxLayout(central);
@@ -68,29 +63,26 @@ void MainWindow::setupUi() {
         if (!m_manager.loadFromFile(sample, &err)) {
             qWarning() << "Errore caricamento sample:" << err;
         } else {
-            m_currentFilePath.clear(); // non segna come salvato
+            m_currentFilePath.clear();
             m_dirty = false;
         }
     }
 
-    // Top row: search + filters
     QHBoxLayout* topRow = new QHBoxLayout();
     QLabel* lblSearch = new QLabel(tr("Cerca:"), this);
     m_searchLineEdit = new QLineEdit(this);
     m_searchLineEdit->setPlaceholderText(tr("Cerca per titolo, autore, regista..."));
 
-    // Filter buttons
     QWidget* filterWidget = new QWidget(this);
     QHBoxLayout* filterLayout = new QHBoxLayout(filterWidget);
     filterLayout->setContentsMargins(0,0,0,0);
     QPushButton* btnAll = new QPushButton(tr("All"), this);
     QPushButton* btnBooks = new QPushButton(tr("Book"), this);
     QPushButton* btnFilms = new QPushButton(tr("Film"), this);
-    QPushButton* btnArticles = new QPushButton(tr("Article"), this); // sostituisce Serie TV
+    QPushButton* btnArticles = new QPushButton(tr("Article"), this);
     btnAll->setCheckable(true); btnBooks->setCheckable(true); btnFilms->setCheckable(true); btnArticles->setCheckable(true);
     btnAll->setChecked(true);
 
-    // Group so only one selected at a time
     QButtonGroup* filterGroup = new QButtonGroup(this);
     filterGroup->setExclusive(true);
     filterGroup->addButton(btnAll);
@@ -108,10 +100,8 @@ void MainWindow::setupUi() {
     topRow->addWidget(filterWidget, 0);
     mainLayout->addLayout(topRow);
 
-    // Main splitter: left list (40%) - right detail (60%)
     QSplitter* splitter = new QSplitter(Qt::Horizontal, this);
 
-    // Left pane
     QWidget* leftPane = new QWidget(this);
     QVBoxLayout* leftLayout = new QVBoxLayout(leftPane);
     m_listView = new QListView(this);
@@ -120,18 +110,15 @@ void MainWindow::setupUi() {
     leftLayout->addWidget(m_listView);
     splitter->addWidget(leftPane);
 
-    // Right pane
     QWidget* rightPane = new QWidget(this);
     QVBoxLayout* rightLayout = new QVBoxLayout(rightPane);
 
-    // Detail title
     m_detailTitle = new QLabel(tr("Seleziona un elemento"), this);
     QFont titleFont = m_detailTitle->font();
     titleFont.setPointSize(titleFont.pointSize() + 4);
     titleFont.setBold(true);
     m_detailTitle->setFont(titleFont);
 
-    // Detail scroll area
     m_detailScroll = new QScrollArea(this);
     m_detailScroll->setWidgetResizable(true);
     m_detailContainer = new QWidget(this);
@@ -151,7 +138,6 @@ void MainWindow::setupUi() {
 
     mainLayout->addWidget(splitter, 1);
 
-    // Bottom actions
     QHBoxLayout* bottomRow = new QHBoxLayout();
     bottomRow->addStretch(1);
     QPushButton* addBtn = new QPushButton(tr("Aggiungi"), this);
@@ -165,7 +151,6 @@ void MainWindow::setupUi() {
     bottomRow->addWidget(saveBtn);
     mainLayout->addLayout(bottomRow);
 
-    // Model setup
     m_model = new MediaListModel(&m_manager, this);
     m_proxy = new QSortFilterProxyModel(this);
     m_proxy->setSourceModel(m_model);
@@ -173,17 +158,14 @@ void MainWindow::setupUi() {
     m_proxy->setFilterRole(MediaListModel::TitleRole);
     m_listView->setModel(m_proxy);
 
-    // Connections
     connect(m_searchLineEdit, &QLineEdit::textChanged, this, &MainWindow::onSearchTextChanged);
 
     connect(filterGroup, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked),
     this, [this, btnAll, btnBooks, btnFilms, btnArticles](QAbstractButton* b){
-        // Se "All" selezionato: cerchiamo per testo (titolo)
         if (b == btnAll) {
             m_proxy->setFilterRole(MediaListModel::TitleRole);
             m_proxy->setFilterFixedString(m_searchLineEdit->text());
         } else {
-            // Quando un tipo è selezionato filtriamo per TypeRole
             m_proxy->setFilterRole(MediaListModel::TypeRole);
             if (b == btnBooks)      m_proxy->setFilterFixedString("Book");
             else if (b == btnFilms) m_proxy->setFilterFixedString("Film");
@@ -191,23 +173,18 @@ void MainWindow::setupUi() {
         }
     });
 
-
     connect(addBtn, &QPushButton::clicked, this, &MainWindow::onActionAdd);
     connect(editBtn, &QPushButton::clicked, this, &MainWindow::onActionEdit);
     connect(delBtn, &QPushButton::clicked, this, &MainWindow::onActionDelete);
     connect(saveBtn, &QPushButton::clicked, this, &MainWindow::onActionSave);
 
-    // selection change -> enable/disable buttons
     connect(m_listView->selectionModel(), &QItemSelectionModel::currentChanged,
             this, &MainWindow::onSelectionChanged);
     m_actionEdit->setEnabled(false);
     m_actionDelete->setEnabled(false);
 
-    // update detail when selection changes
     connect(m_listView->selectionModel(), &QItemSelectionModel::currentChanged,
             this, &MainWindow::onListSelectionChanged);
-
-    // Save pointer to some widgets we may want to update later
 }
 
 void MainWindow::setupConnections() {
@@ -312,11 +289,10 @@ void MainWindow::onActionDelete() {
 
     if (!m_manager.remove(row)) { QMessageBox::warning(this, tr("Errore"), tr("Impossibile eliminare l'elemento.")); return; }
 
-    // aggiorna vista: scegli next selection se esiste, altrimenti pulisci dettaglio
     int newCount = m_manager.count();
     if (newCount == 0) {
         m_listView->clearSelection();
-        showDetailForIndex(-1); // pulisce dettaglio
+        showDetailForIndex(-1);
     } else {
         int nextRow = qMin(row, newCount - 1);
         QModelIndex nextIdx = m_model->index(nextRow, 0);
@@ -324,24 +300,22 @@ void MainWindow::onActionDelete() {
         m_listView->setCurrentIndex(proxyIdx);
         showDetailForIndex(nextRow);
     }
-
     m_dirty = true;
 }
-
 
 void MainWindow::onSearchTextChanged(const QString& txt) {
     if (!m_proxy) return;
     m_proxy->setFilterFixedString(txt);
 }
 
-void MainWindow::onListSelectionChanged(const QModelIndex& current, const QModelIndex& /*previous*/) {
+void MainWindow::onListSelectionChanged(const QModelIndex& current, const QModelIndex&) {
     if (!current.isValid()) return;
     QModelIndex src = m_proxy->mapToSource(current);
     int row = src.row();
     showDetailForIndex(row);
 }
 
-void MainWindow::onSelectionChanged(const QModelIndex& current, const QModelIndex& /*previous*/) {
+void MainWindow::onSelectionChanged(const QModelIndex& current, const QModelIndex&) {
     bool hasSelection = false;
     if (current.isValid()) {
         QSortFilterProxyModel* proxy = qobject_cast<QSortFilterProxyModel*>(m_listView->model());
@@ -358,7 +332,6 @@ void MainWindow::showDetailForIndex(int idx) {
     if (idx < 0 || idx >= m_manager.count()) {
         qDebug() << "showDetailForIndex: index out of range" << idx;
         m_detailTitle->setText(tr("Seleziona un elemento"));
-        // clear detail container
         QLayout* layout = m_detailContainer->layout();
         if (!layout) return;
         while (QLayoutItem* it = layout->takeAt(0)) {
@@ -370,7 +343,6 @@ void MainWindow::showDetailForIndex(int idx) {
         layout->addWidget(placeholder);
         return;
     }
-
     auto m = m_manager.at(idx);
     if (!m) return;
 
@@ -378,7 +350,6 @@ void MainWindow::showDetailForIndex(int idx) {
     QWidget* detail = builder.build(*m);
     if (!detail) return;
 
-    // update title
     m_detailTitle->setText(m->getTitle());
 
     QLayout* layout = m_detailContainer->layout();
@@ -386,12 +357,10 @@ void MainWindow::showDetailForIndex(int idx) {
         layout = new QVBoxLayout(m_detailContainer);
         m_detailContainer->setLayout(layout);
     }
-
     while (QLayoutItem* it = layout->takeAt(0)) {
         if (QWidget* w = it->widget()) { w->setParent(nullptr); w->deleteLater(); }
         delete it;
     }
-
     detail->setParent(m_detailContainer);
     layout->addWidget(detail);
     detail->show();

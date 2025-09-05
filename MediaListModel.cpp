@@ -4,6 +4,7 @@
 
 #include <QDebug>
 
+
 MediaListModel::MediaListModel(MediaManager* manager, QObject* parent)
     : QAbstractListModel(parent), m_manager(nullptr)
 {
@@ -52,8 +53,6 @@ QHash<int, QByteArray> MediaListModel::roleNames() const {
 
 void MediaListModel::setManager(MediaManager* manager) {
     if (m_manager == manager) return;
-
-    // disconnect old
     if (m_manager) {
         disconnect(m_manager, &MediaManager::itemAdded, this, &MediaListModel::onItemAdded);
         disconnect(m_manager, &MediaManager::itemRemoved, this, &MediaListModel::onItemRemoved);

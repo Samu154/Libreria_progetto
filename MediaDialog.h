@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QSharedPointer>
 
+
 class QComboBox;
 class QStackedWidget;
 class QLineEdit;
@@ -15,7 +16,6 @@ class MediaDialog : public QDialog {
 public:
     explicit MediaDialog(QWidget* parent = nullptr, QSharedPointer<Media> mediaPassed = {});
     ~MediaDialog() override;
-
     QSharedPointer<Media> getResult() const;
 
 private slots:
@@ -32,17 +32,14 @@ private:
     QComboBox* m_typeCombo = nullptr;
     QStackedWidget* m_stack = nullptr;
 
-    // Book
     QLineEdit* m_bookTitle = nullptr;
     QLineEdit* m_bookAuthor = nullptr;
     QLineEdit* m_bookYear = nullptr;
 
-    // Film
     QLineEdit* m_filmTitle = nullptr;
     QLineEdit* m_filmDirector = nullptr;
     QLineEdit* m_filmDuration = nullptr;
 
-    // Article
     QLineEdit* m_articleTitle = nullptr;
     QLineEdit* m_articleJournal = nullptr;
     QLineEdit* m_articlePages = nullptr;
@@ -54,4 +51,4 @@ private:
     QSharedPointer<Media> m_result;
 };
 
-#endif // MEDIADIALOG_H
+#endif

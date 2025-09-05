@@ -7,16 +7,13 @@
 #include <QLabel>
 
 
-MediaDetailWidgetBuilder::MediaDetailWidgetBuilder(QWidget* parent)
-: parent(parent) {}
-
+MediaDetailWidgetBuilder::MediaDetailWidgetBuilder(QWidget* parent): parent(parent) {}
 
 QWidget* MediaDetailWidgetBuilder::build(const Media& media) {
 result = nullptr;
-media.accept(*this); // doppio dispatch polimorfico
-return result; // sarà impostato nella visit del tipo concreto
+media.accept(*this);
+return result;
 }
-
 
 void MediaDetailWidgetBuilder::visit(const Book& b) {
 QWidget* w = new QWidget(parent);

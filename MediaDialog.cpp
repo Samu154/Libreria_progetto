@@ -30,7 +30,6 @@ void MediaDialog::buildUi() {
     m_typeCombo = new QComboBox(this);
     m_typeCombo->addItems(MediaFactory::supportedTypes());
 
-    // Book page
     QWidget* bookPage = new QWidget(this);
     QFormLayout* bookLayout = new QFormLayout(bookPage);
     m_bookTitle = new QLineEdit(bookPage);
@@ -41,7 +40,6 @@ void MediaDialog::buildUi() {
     bookLayout->addRow(tr("Autore:"), m_bookAuthor);
     bookLayout->addRow(tr("Anno:"), m_bookYear);
 
-    // Film page
     QWidget* filmPage = new QWidget(this);
     QFormLayout* filmLayout = new QFormLayout(filmPage);
     m_filmTitle = new QLineEdit(filmPage);
@@ -52,7 +50,6 @@ void MediaDialog::buildUi() {
     filmLayout->addRow(tr("Regista:"), m_filmDirector);
     filmLayout->addRow(tr("Durata (min):"), m_filmDuration);
 
-    // Article page
     QWidget* articlePage = new QWidget(this);
     QFormLayout* articleLayout = new QFormLayout(articlePage);
     m_articleTitle = new QLineEdit(articlePage);
@@ -150,7 +147,6 @@ QSharedPointer<Media> MediaDialog::buildMediaFromForm() const {
 
 void MediaDialog::onAccept() {
     if (!validateInputs()) {
-        // minimal feedback; replace with QMessageBox for better UX
         return;
     }
     m_result = buildMediaFromForm();
