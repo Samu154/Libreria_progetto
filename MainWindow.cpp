@@ -177,48 +177,20 @@ void MainWindow::onActionEdit() {
 }
 
 void MainWindow::onActionDelete() {
-    // Ottieni l'indice nella view (proxy)
-    QModelIndex idxProxy = m_listView->currentIndex();
-    if (!idxProxy.isValid()) {
-        // niente selezione -> non fare nulla, oppure mostra un avviso lieve
-        QMessageBox::information(this, tr("Nessuna selezione"), tr("Nessun elemento selezionato da eliminare."));
-        return;
-    }
-
-    // Mappa al modello sorgente (controlla che il model sia un proxy)
-    QSortFilterProxyModel* proxy = qobject_cast<QSortFilterProxyModel*>(m_listView->model());
-    if (!proxy) {
-        qWarning() << "onActionDelete: listView model is not a QSortFilterProxyModel";
-        return;
-    }
-
-    QModelIndex srcIdx = proxy->mapToSource(idxProxy);
-    if (!srcIdx.isValid()) {
-        qWarning() << "onActionDelete: mapped source index invalid";
-        QMessageBox::warning(this, tr("Errore"), tr("Impossibile determinare l'elemento da eliminare."));
-        return;
-    }
-
-    int row = srcIdx.row();
-    if (row < 0 || row >= m_manager.count()) {
-        qWarning() << "onActionDelete: row out of range" << row << "count =" << m_manager.count();
-        QMessageBox::warning(this, tr("Errore"), tr("Indice non valido."));
-        return;
-    }
-
-    // Conferma utente
-    if (QMessageBox::question(this, tr("Conferma"), tr("Eliminare l'elemento selezionato?"),
-                              QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) {
-        return;
-    }
-
-    // Rimuovi tramite MediaManager: verifica valore di ritorno
-    if (!m_manager.remove(row)) {
-        QMessageBox::warning(this, tr("Errore"), tr("Impossibile eliminare l'elemento."));
-        return;
-    }
-
-    m_dirty = true;
+QModelIndex idxProxy = m_listView->currentIndex();
+if (!idxProxy.isValid()) {
+QMessageBox::information(this, tr("Nessuna selezione"), tr("Nessun elemento selezionato da eliminare."));
+return;
+}
+QSortFilterProxyModel* proxy = qobject_cast<QSortFilterProxyModel*>(m_listView->model());
+if (!proxy) { qWarning() << "onActionDelete: model not proxy"; return; }
+QModelIndex srcIdx = proxy->mapToSource(idxProxy);
+if (!srcIdx.isValid()) { QMessageBox::warning(this, tr("Errore"), tr("Impossibile determinare l'elemento da eliminare.")); return; }
+int row = srcIdx.row();
+if (row < 0 || row >= m_manager.count()) { QMessageBox::warning(this, tr("Errore"), tr("Indice non valido.")); return; }
+if (QMessageBox::question(this, tr("Conferma"), tr("Eliminare l'elemento selezionato?"), QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes) return;
+if (!m_manager.remove(row)) { QMessageBox::warning(this, tr("Errore"), tr("Impossibile eliminare l'elemento.")); return; }
+m_dirty = true;
 }
 
 void MainWindow::onSearchTextChanged(const QString& txt) {
@@ -248,19 +220,70 @@ void MainWindow::onSelectionChanged(const QModelIndex& current, const QModelInde
 }
 
 void MainWindow::showDetailForIndex(int idx) {
-    auto m = m_manager.at(idx);
-    if (!m) return;
-    MediaDetailWidgetBuilder builder(this);
-    QWidget* detail = builder.build(*m);
-    if (!detail) return;
+if (idx < 0 || idx >= m_manager.count()) {
+qDebug() << "showDetailForIndex: index out of range" << idx;
+return;
+}
 
-    // find layout inside the placeholder and replace content
-    QLayout* layout = m_detailPlaceholder->parentWidget()->layout();
-    if (!layout) return;
-    // remove old widgets
-    while (QLayoutItem* it = layout->takeAt(0)) {
-        if (it->widget()) it->widget()->deleteLater();
-        delete it;
-    }
-    layout->addWidget(detail);
+
+auto m = m_manager.at(idx);
+if (!m) {
+qDebug() << "showDetailForIndex: media is null at" << idx;
+return;
+}
+
+
+MediaDetailWidgetBuilder builder(this);
+QWidget* detail = nullptr;
+try {
+detail = builder.build(*m);
+} catch(...) {
+qWarning() << "showDetailForIndex: builder threw an exception";
+detail = nullptr;
+}
+if (!detail) {
+qDebug() << "showDetailForIndex: builder returned null";
+return;
+}
+
+
+// Ottieni la prima pagina del stacked widget (placeholder)
+if (!m_stackedWidget) {
+qWarning() << "showDetailForIndex: stackedWidget is null";
+return;
+}
+if (m_stackedWidget->count() == 0) {
+qWarning() << "showDetailForIndex: no pages in stackedWidget";
+return;
+}
+
+
+QWidget* page = m_stackedWidget->widget(0);
+if (!page) {
+qWarning() << "showDetailForIndex: placeholder page is null";
+return;
+}
+
+
+QLayout* layout = page->layout();
+if (!layout) {
+layout = new QVBoxLayout(page);
+page->setLayout(layout);
+}
+
+
+// Rimuovi vecchi widget in modo sicuro
+while (QLayoutItem* it = layout->takeAt(0)) {
+if (QWidget* w = it->widget()) {
+w->setParent(nullptr);
+w->deleteLater();
+}
+delete it;
+}
+
+
+// Assicuriamoci che detail abbia parent corretto
+detail->setParent(page);
+layout->addWidget(detail);
+detail->show();
 }
