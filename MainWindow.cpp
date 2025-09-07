@@ -143,12 +143,10 @@ void MainWindow::setupUi() {
     QPushButton* addBtn = new QPushButton(tr("Aggiungi"), this);
     QPushButton* editBtn = new QPushButton(tr("Modifica"), this);
     QPushButton* delBtn = new QPushButton(tr("Elimina"), this);
-    QPushButton* saveBtn = new QPushButton(tr("Salva"), this);
 
     bottomRow->addWidget(addBtn);
     bottomRow->addWidget(editBtn);
     bottomRow->addWidget(delBtn);
-    bottomRow->addWidget(saveBtn);
     mainLayout->addLayout(bottomRow);
 
     m_model = new MediaListModel(&m_manager, this);
@@ -176,7 +174,6 @@ void MainWindow::setupUi() {
     connect(addBtn, &QPushButton::clicked, this, &MainWindow::onActionAdd);
     connect(editBtn, &QPushButton::clicked, this, &MainWindow::onActionEdit);
     connect(delBtn, &QPushButton::clicked, this, &MainWindow::onActionDelete);
-    connect(saveBtn, &QPushButton::clicked, this, &MainWindow::onActionSave);
 
     connect(m_listView->selectionModel(), &QItemSelectionModel::currentChanged,
             this, &MainWindow::onSelectionChanged);
